@@ -2,7 +2,7 @@ import userSchema from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import pkg from "jsonwebtoken";
 const {sign}=pkg;
-
+import postSchema from "../models/post.model.js";
 export async function register(req,res){
    try {
      const {email,password,cpassword}=req.body;
@@ -50,6 +50,56 @@ export async function getUsers(req,res){
         const {id}=req.user;
         const user=await userSchema.findById(id).select("-password");
         res.status(200).send(user);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}
+
+export async function addPost(req,res){
+    try {
+        const {id}=req.user;
+        const {title,content,author}=req.body;
+        if(!(title && content && author))
+            return res.status(400).send("All inputs are required");
+        const data=await postSchema.create({user_id:id,title,content,author});
+        res.status(200).send("Post added successfully");
+        
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}
+
+export async function getPosts(req,res){
+    try {
+        const {id}=req.user;
+        const posts=await postSchema.find({user_id:id}).populate("user_id").select("-password");
+        console.log(posts);
+        res.status(200).send(posts);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}
+
+export async function deletePost(req,res){
+
+ console.log(req.params.id);
+ console.log(req.user.id);
+ const{id} = req.params;
+ try {
+    const data=await postSchema.deleteOne({_id:id,user_id:req.user.id});
+    res.status(200).send("Post deleted successfully");
+ } catch (error) {
+    res.status(500).send(error.message);
+ }
+ 
+ 
+}
+
+
+export async function getMe(req,res) {
+    try {
+      console.log(req.user);
+        
     } catch (error) {
         res.status(500).send(error.message);
     }
